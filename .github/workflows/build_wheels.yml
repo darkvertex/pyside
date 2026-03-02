@@ -31,26 +31,27 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.8.*'
+          setup-python: false
 
       - name: Set up libclang (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libclang-18-dev
+          sudo apt-get install -y libclang-18-dev llvm-18-dev
           echo "LLVM_INSTALL_DIR=/usr/lib/llvm-18" >> $GITHUB_ENV
 
       - name: Set up libclang (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          curl -L -o libclang.7z "https://download.qt.io/development_releases/prebuilt/libclang/libclang-release_18.1.8-based-windows-vs2019_64.7z"
-          7z x libclang.7z -y
-          echo "LLVM_INSTALL_DIR=$(pwd)/libclang" >> $GITHUB_ENV
+          echo "LLVM_INSTALL_DIR=C:/Program Files/LLVM" >> $GITHUB_ENV
 
       - name: Install build dependencies
         run: pip install -r requirements.txt
 
       - name: Build wheels
+        env:
+          CXXFLAGS: -DQT_USE_QSTRINGBUILDER
         run: python setup.py bdist_wheel --ignore-git --parallel=4
 
       - uses: actions/upload-artifact@v4
