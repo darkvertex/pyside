@@ -9,24 +9,51 @@ on:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build on ${{ matrix.os }} (Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        python-version: ['3.10', '3.11']
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+
+      - name: Set up libclang (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-18-dev
+          echo "LLVM_INSTALL_DIR=/usr/lib/llvm-18" >> $GITHUB_ENV
+
+      - name: Set up libclang (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          curl -L -o libclang.7z "https://download.qt.io/development_releases/prebuilt/libclang/libclang-release_18.1.8-based-windows-vs2019_64.7z"
+          7z x libclang.7z -y
+          echo "LLVM_INSTALL_DIR=$(pwd)/libclang" >> $GITHUB_ENV
+
+      - name: Install build dependencies
+        run: pip install -r requirements.txt
+
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
-        env:
-          CIBW_BUILD: cp310-* cp311-*
-          CIBW_BEFORE_BUILD: python -m pip install "wheel==0.43.0"
+        run: python setup.py bdist_wheel --ignore-git --parallel=4
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
+          name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: dist/*.whl

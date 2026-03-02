@@ -1,2 +1,0 @@
-2026-03-02 20:46:42,613 - aqt.metadata - DEBUG - metadata 140069960401024 Connection to 'https://download.qt.io' failed. Retrying with fallback 'https://ftp1.nluug.nl/languages/qt/'.
-2026-03-02 20:46:45,620 - aqt.main - ERROR - installer 140069960401024 Failure to connect to https://ftp1.nluug.nl/languages/qt/online/qtsdkrepository/linux_x64/desktop/: ConnectionError
