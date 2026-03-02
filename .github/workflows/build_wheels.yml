@@ -20,18 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Skip wheel build on pull requests
-        if: github.event_name == 'pull_request'
-        run: echo "Skipping full wheel builds on pull_request; release builds run on version tags."
-
       - name: Build wheels
-        if: github.event_name != 'pull_request'
         uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BUILD: cp310-* cp311-*
+          CIBW_BEFORE_BUILD: python -m pip install "wheel==0.43.0"
 
       - uses: actions/upload-artifact@v4
-        if: github.event_name != 'pull_request'
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
